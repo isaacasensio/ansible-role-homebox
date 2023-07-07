@@ -1,0 +1,16 @@
+[Unit]
+Description=homebox
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+User={{ homebox_container_user }}
+Group=docker
+WorkingDirectory={{ homebox_host_config_path }}
+ExecStartPre=/usr/local/bin/docker-compose -f {{ homebox_host_config_path }}/docker-compose.yml down
+ExecStart=/usr/local/bin/docker-compose -f {{ homebox_host_config_path }}/docker-compose.yml up
+ExecStop=/usr/local/bin/docker-compose -f {{ homebox_host_config_path }}/docker-compose.yml down
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+---
+version: "3.4"
+services:
+  homebox:
+    restart: unless-stopped
+    ports:
+      - {{ homebox_host_port }}:7745
+    image: {{ homebox_image }}
+    user: {{ created_uid }}:{{ created_gid }}
+    volumes: 
+      -  {{ homebox_host_data_path }}:/data
+    environment:
+      TZ: {{ homebox_timezone }}

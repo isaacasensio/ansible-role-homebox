@@ -1,0 +1,70 @@
+---
+- name: Create homebox user
+  ansible.builtin.user:
+    name: "{{ homebox_container_user }}"
+    shell: /sbin/nologin
+    create_home: true
+    state: present
+  become: true
+
+- name: Get created user metadata
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ homebox_container_user }}"
+
+- name: Setting user id and group id facts
+  ansible.builtin.set_fact:
+    created_uid: "{{ ansible_facts.getent_passwd[homebox_container_user].1 }}"
+    created_gid: "{{ ansible_facts.getent_passwd[homebox_container_user].2 }}"
+
+- name: Ensure homebox folders exists
+  become: true
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    owner: "{{ homebox_container_user }}"
+    group: "{{ homebox_container_user }}"
+    state: directory
+    mode: 0755
+  loop:
+    - "{{ homebox_host_config_path }}"
+    - "{{ homebox_host_data_path }}"
+
+- name: Copy homebox docker-compose template.
+  ansible.builtin.template:
+    src: templates/docker-compose.yml.j2
+    dest: "{{ homebox_host_config_path }}/docker-compose.yml"
+    owner: "{{ homebox_container_user }}"
+    group: "{{ homebox_container_user }}"
+    mode: 0644
+  become: true
+
+- name: Create systemd homebox service.
+  ansible.builtin.template:
+    src: templates/homebox.service.j2
+    dest: "/etc/systemd/system/homebox.service"
+    mode: 0644
+  become: true
+
+- name: Ensure homebox.service is started
+  ansible.builtin.systemd:
+    state: started
+    enabled: true
+    name: homebox
+  become: true
+
+- name: Check homebox container
+  ansible.builtin.uri:
+    url: "http://localhost:{{ homebox_host_port }}"
+    status_code: [200, 401]
+  register: result
+  until: result.status == 200 or result.status == 401
+  retries: 5
+  delay: 60
+
+- name: Remove old image versions
+  become: true
+  community.docker.docker_prune:
+    images: true
+    images_filters:
+      dangling: false
+  notify: Restart Docker service

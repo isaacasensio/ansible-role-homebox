@@ -1,0 +1,12 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Populate service facts
+      ansible.builtin.service_facts:
+
+    - name: Verify homebox is running
+      ansible.builtin.assert:
+        that: >-
+          ansible_facts['services']['homebox.service']['state'] == 'running'
+      become: true
