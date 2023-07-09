@@ -12,10 +12,10 @@ services:
       -  {{ homebox_host_data_path }}:/data
     environment:
       TZ: {{ homebox_timezone }}
-    {% if homebox_network_name is defined and homebox_network_name != '' %}
+{% if homebox_network_name is defined and homebox_network_name != '' %}
     networks:
       - {{ homebox_network_name }}
-    {% endif %}
+{% endif %}
 
 {% if homebox_network_name is defined and homebox_network_name != '' %}
 networks:
