@@ -5,3 +5,4 @@ homebox_host_data_path: /var/lib/homebox
 homebox_container_user: homebox
 homebox_host_port: 7745
 homebox_timezone: "Europe/Madrid"
+homebox_network_name: ""
